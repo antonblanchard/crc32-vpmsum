@@ -21,7 +21,7 @@ static void create_table(unsigned int crc, int reflect)
 	cm_t.cm_refin = reflect;
 
 	printf("#ifdef CRC_TABLE\n");
-	printf("unsigned int crc_table[] = {");
+	printf("static const unsigned int crc_table[] = {");
 
 	for (i = 0; i < 256; i++) {
 		if (!(i % 4))

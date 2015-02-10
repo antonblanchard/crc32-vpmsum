@@ -36,7 +36,7 @@
 #define r2 2
 #endif
 
-	.section	.data
+	.section	.rodata
 .balign 16
 
 .byteswap_constant:
