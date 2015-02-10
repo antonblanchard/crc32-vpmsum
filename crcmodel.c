@@ -73,6 +73,9 @@ void cm_ini(p_cm)
 p_cm_t p_cm;
 {
 	p_cm->cm_reg = p_cm->cm_init;
+	/* Reflect initial value */
+	if (p_cm->cm_refin)
+		p_cm->cm_reg = reflect(p_cm->cm_reg, p_cm->cm_width);
 }
 
 /******************************************************************************/
