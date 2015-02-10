@@ -36,7 +36,12 @@ static unsigned int verify_crc(unsigned int crc, unsigned char *p,
 	cm_t.cm_refin = FALSE;
 	cm_t.cm_refot = FALSE;
 #endif
+#ifdef CRC_XOR
+	cm_t.cm_init ^= 0xffffffff;
+	cm_t.cm_xorot = 0xffffffff;
+#else
 	cm_t.cm_xorot = 0x0;
+#endif
 	cm_ini(&cm_t);
 
 	for (i = 0; i < len; i++)
@@ -51,6 +56,7 @@ static unsigned int verify_crc(unsigned int crc, unsigned char *p,
 int main(void)
 {
 	unsigned char *data;
+	unsigned int crc = 0, verify = 0;
 
 	data = memalign(VMX_ALIGN, MAX_CRC_LENGTH+VMX_ALIGN_MASK);
 	if (!data) {
@@ -61,7 +67,6 @@ int main(void)
 	srandom(1);
 
 	while (1) {
-		unsigned int crc = 0, verify = 0;
 		unsigned int len, offset;
 		unsigned long i;
 
