@@ -98,6 +98,8 @@ FUNC_START(__crc32_vpmsum)
 	li	off112,112
 	li	r0,0
 
+	mr	r10,r3
+
 	vxor	zeroes,zeroes,zeroes
 	vspltisw ones,-1
 
@@ -120,6 +122,9 @@ FUNC_START(__crc32_vpmsum)
 	lvx	byteswap,0,r3
 	addi	r3,r3,16
 #endif
+
+	cmpdi	r5,256
+	blt	.Lshort
 
 	rldicr	r6,r5,0,56
 
@@ -502,6 +507,7 @@ FUNC_START(__crc32_vpmsum)
 
 	vxor	v0,v0,v4
 
+.Lbarrett_reduction:
 	/* Barrett constants */
 	addis	r3,r2,.barrett_constants@toc@ha
 	addi	r3,r3,.barrett_constants@toc@l
@@ -588,4 +594,146 @@ FUNC_START(__crc32_vpmsum)
 	VPMSUMD(v15,v23,const1)
 
 	b	.Lsecond_cool_down
+
+.Lshort:
+	cmpdi	r5,0
+	beq	.Lzero
+
+	addis	r3,r2,.short_constants@toc@ha
+	addi	r3,r3,.short_constants@toc@l
+
+	/* Calculate where in the constant table we need to start */
+	subfic	r6,r5,256
+	add	r3,r3,r6
+
+	/* How many 16 byte chunks? */
+	srdi	r7,r5,4
+	mtctr	r7
+
+	vxor	v19,v19,v19
+	vxor	v20,v20,v20
+
+	lvx	v0,0,r4
+	lvx	v16,0,r3
+	VPERM(v0,v0,v16,byteswap)
+	vxor	v0,v0,v8	/* xor in initial value */
+	VPMSUMW(v0,v0,v16)
+	bdz	.Lv0
+
+	lvx	v1,off16,r4
+	lvx	v17,off16,r3
+	VPERM(v1,v1,v17,byteswap)
+	VPMSUMW(v1,v1,v17)
+	bdz	.Lv1
+
+	lvx	v2,off32,r4
+	lvx	v16,off32,r3
+	VPERM(v2,v2,v16,byteswap)
+	VPMSUMW(v2,v2,v16)
+	bdz	.Lv2
+
+	lvx	v3,off48,r4
+	lvx	v17,off48,r3
+	VPERM(v3,v3,v17,byteswap)
+	VPMSUMW(v3,v3,v17)
+	bdz	.Lv3
+
+	lvx	v4,off64,r4
+	lvx	v16,off64,r3
+	VPERM(v4,v4,v16,byteswap)
+	VPMSUMW(v4,v4,v16)
+	bdz	.Lv4
+
+	lvx	v5,off80,r4
+	lvx	v17,off80,r3
+	VPERM(v5,v5,v17,byteswap)
+	VPMSUMW(v5,v5,v17)
+	bdz	.Lv5
+
+	lvx	v6,off96,r4
+	lvx	v16,off96,r3
+	VPERM(v6,v6,v16,byteswap)
+	VPMSUMW(v6,v6,v16)
+	bdz	.Lv6
+
+	lvx	v7,off112,r4
+	lvx	v17,off112,r3
+	VPERM(v7,v7,v17,byteswap)
+	VPMSUMW(v7,v7,v17)
+	bdz	.Lv7
+
+	addi	r3,r3,128
+	addi	r4,r4,128
+
+	lvx	v8,0,r4
+	lvx	v16,0,r3
+	VPERM(v8,v8,v16,byteswap)
+	VPMSUMW(v8,v8,v16)
+	bdz	.Lv8
+
+	lvx	v9,off16,r4
+	lvx	v17,off16,r3
+	VPERM(v9,v9,v17,byteswap)
+	VPMSUMW(v9,v9,v17)
+	bdz	.Lv9
+
+	lvx	v10,off32,r4
+	lvx	v16,off32,r3
+	VPERM(v10,v10,v16,byteswap)
+	VPMSUMW(v10,v10,v16)
+	bdz	.Lv10
+
+	lvx	v11,off48,r4
+	lvx	v17,off48,r3
+	VPERM(v11,v11,v17,byteswap)
+	VPMSUMW(v11,v11,v17)
+	bdz	.Lv11
+
+	lvx	v12,off64,r4
+	lvx	v16,off64,r3
+	VPERM(v12,v12,v16,byteswap)
+	VPMSUMW(v12,v12,v16)
+	bdz	.Lv12
+
+	lvx	v13,off80,r4
+	lvx	v17,off80,r3
+	VPERM(v13,v13,v17,byteswap)
+	VPMSUMW(v13,v13,v17)
+	bdz	.Lv13
+
+	lvx	v14,off96,r4
+	lvx	v16,off96,r3
+	VPERM(v14,v14,v16,byteswap)
+	VPMSUMW(v14,v14,v16)
+	bdz	.Lv14
+
+	lvx	v15,off112,r4
+	lvx	v17,off112,r3
+	VPERM(v15,v15,v17,byteswap)
+	VPMSUMW(v15,v15,v17)
+
+.Lv15:	vxor	v19,v19,v15
+.Lv14:	vxor	v20,v20,v14
+.Lv13:	vxor	v19,v19,v13
+.Lv12:	vxor	v20,v20,v12
+.Lv11:	vxor	v19,v19,v11
+.Lv10:	vxor	v20,v20,v10
+.Lv9:	vxor	v19,v19,v9
+.Lv8:	vxor	v20,v20,v8
+.Lv7:	vxor	v19,v19,v7
+.Lv6:	vxor	v20,v20,v6
+.Lv5:	vxor	v19,v19,v5
+.Lv4:	vxor	v20,v20,v4
+.Lv3:	vxor	v19,v19,v3
+.Lv2:	vxor	v20,v20,v2
+.Lv1:	vxor	v19,v19,v1
+.Lv0:	vxor	v20,v20,v0
+
+	vxor	v0,v19,v20
+
+	b	.Lbarrett_reduction
+
+.Lzero:
+	mr	r3,r10
+	blr
 FUNC_END(__crc32_vpmsum)

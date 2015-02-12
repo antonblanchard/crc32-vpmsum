@@ -24,9 +24,6 @@ static unsigned int crc32_align(unsigned int crc, unsigned char *p,
 }
 #endif
 
-/* FIXME */
-#define	MIN 256
-
 unsigned int __crc32_vpmsum(unsigned int crc, unsigned char *p,
 			    unsigned long len);
 
@@ -40,7 +37,7 @@ unsigned int crc32_vpmsum(unsigned int crc, unsigned char *p,
 	crc ^= 0xffffffff;
 #endif
 
-	if (len < MIN + VMX_ALIGN) {
+	if (len < VMX_ALIGN + VMX_ALIGN_MASK) {
 		crc = crc32_align(crc, p, len);
 		goto out;
 	}
