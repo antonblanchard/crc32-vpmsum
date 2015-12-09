@@ -59,6 +59,8 @@ static void do_nonreflected(unsigned int crc, int xor)
 		printf("\n");
 	}
 
+	printf(".short_constants:\n");
+
 	printf("\n\t/* Reduce final 1024-2048 bits to 64 bits, shifting 32 bits to include the trailing 32 bits of zeros */\n");
 	for (i = (1024*2)-128; i >= 0; i -= 128) {
 		a = get_remainder(crc, 32, i+128);
