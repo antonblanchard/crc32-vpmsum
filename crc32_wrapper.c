@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 #define CRC_TABLE
 #include "crc32_constants.h"
 
