@@ -584,6 +584,7 @@ FUNC_START(__crc32_vpmsum)
 	/* Get it into r3 */
 	MFVRD(r3, v0)
 
+.Lout:
 	subi	r6,r1,56+10*16
 	subi	r7,r1,56+2*16
 
@@ -763,5 +764,6 @@ FUNC_START(__crc32_vpmsum)
 
 .Lzero:
 	mr	r3,r10
-	blr
+	b	.Lout
+
 FUNC_END(__crc32_vpmsum)
