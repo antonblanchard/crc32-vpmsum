@@ -97,6 +97,21 @@ FUNC_START(__crc32_vpmsum)
 	li	off112,112
 	li	r0,0
 
+	/* Enough room for saving 10 non volatile VMX registers */
+	subi	r6,r1,56+10*16
+	subi	r7,r1,56+2*16
+
+	stvx	v20,0,r6
+	stvx	v21,off16,r6
+	stvx	v22,off32,r6
+	stvx	v23,off48,r6
+	stvx	v24,off64,r6
+	stvx	v25,off80,r6
+	stvx	v26,off96,r6
+	stvx	v27,off112,r6
+	stvx	v28,0,r7
+	stvx	v29,off16,r7
+
 	mr	r10,r3
 
 	vxor	zeroes,zeroes,zeroes
@@ -568,6 +583,20 @@ FUNC_START(__crc32_vpmsum)
 
 	/* Get it into r3 */
 	MFVRD(r3, v0)
+
+	subi	r6,r1,56+10*16
+	subi	r7,r1,56+2*16
+
+	lvx	v20,0,r6
+	lvx	v21,off16,r6
+	lvx	v22,off32,r6
+	lvx	v23,off48,r6
+	lvx	v24,off64,r6
+	lvx	v25,off80,r6
+	lvx	v26,off96,r6
+	lvx	v27,off112,r6
+	lvx	v28,0,r7
+	lvx	v29,off16,r7
 
 	ld	r31,-8(r1)
 	ld	r30,-16(r1)
