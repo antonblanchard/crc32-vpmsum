@@ -71,7 +71,6 @@
 #define	mask_32bit	v27
 #define	mask_64bit	v28
 #define zeroes		v29
-#define ones		v30
 
 #ifdef BYTESWAP_DATA
 #define VPERM(A, B, C, D) vperm	A, B, C, D
@@ -101,10 +100,10 @@ FUNC_START(__crc32_vpmsum)
 	mr	r10,r3
 
 	vxor	zeroes,zeroes,zeroes
-	vspltisw ones,-1
+	vspltisw v0,-1
 
-	vsldoi	mask_32bit,zeroes,ones,4
-	vsldoi	mask_64bit,zeroes,ones,8
+	vsldoi	mask_32bit,zeroes,v0,4
+	vsldoi	mask_64bit,zeroes,v0,8
 
 	/* Get the initial value into v8 */
 	vxor	v8,v8,v8
