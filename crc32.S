@@ -64,14 +64,14 @@
 #define off96		r30
 #define off112		r31
 
-#define const1		v25
-#define const2		v26
+#define const1		v24
+#define const2		v25
 
-#define byteswap	v27
-#define	mask_32bit	v28
-#define	mask_64bit	v29
-#define zeroes		v30
-#define ones		v31
+#define byteswap	v26
+#define	mask_32bit	v27
+#define	mask_64bit	v28
+#define zeroes		v29
+#define ones		v30
 
 #ifdef BYTESWAP_DATA
 #define VPERM(A, B, C, D) vperm	A, B, C, D
