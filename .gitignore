@@ -27,3 +27,17 @@
 *.i*86
 *.x86_64
 *.hex
+
+# Misc
+barrett_reduction_constants
+barrett_reduction_test
+crc32_bench
+crc32_constants
+crc32_constants.h
+crc32_stress
+crc32_test
+final_fold2_constants
+final_fold2_test
+final_fold_constants
+final_fold_test
+slice_by_8_bench

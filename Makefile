@@ -29,14 +29,17 @@ PROGS=barrett_reduction_constants \
 	crc32_constants.h \
 	slice_by_8_bench
 
+
+PROGS_ALTIVEC=barrett_reduction_test \
+	final_fold_test \
+	final_fold2_test \
+	crc32_test crc32_bench crc32_stress
+
 ifeq ($(call cc-option-yn,-maltivec),y)
 CFLAGS += -maltivec
 ASFLAGS += -maltivec
 
-PROGS += barrett_reduction_test \
-	final_fold_test \
-	final_fold2_test \
-	crc32_test crc32_bench crc32_stress
+PROGS += $(PROGS_ALTIVEC)
 endif
 
 all: $(PROGS)
@@ -61,4 +64,4 @@ crc32_bench: crc32_bench.o crcmodel.o crc32.o crc32_wrapper.o
 crc32_stress: crc32_stress.o crcmodel.o crc32.o crc32_wrapper.o
 
 clean:
-	rm -f crc32_constants.h *.o $(PROGS)
+	rm -f crc32_constants.h *.o $(PROGS) $(PROGS_ALTIVEC)
