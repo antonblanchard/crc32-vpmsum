@@ -201,6 +201,33 @@ Examples
 
 - final_fold2: A second method of reduction
 
+Run time detection
+------------------
+
+The kernel sets the PPC_FEATURE2_VEC_CRYPTO bit in the HWCAP2 field
+when the vpmsum instructions are available. An example of run time
+detection:
+
+```
+#include <sys/auxv.h>
+
+#ifndef PPC_FEATURE2_VEC_CRYPTO
+#define PPC_FEATURE2_VEC_CRYPTO	0x02000000
+#endif
+
+#ifndef AT_HWCAP2
+#define AT_HWCAP2	26
+#endif
+
+...
+
+	if (getauxval(AT_HWCAP2) & PPC_FEATURE2_VEC_CRYPTO) {
+		/* Use crc32-vpmsum optimised version */
+	} else {
+		/* fall back to non accelerated version */
+	}
+```
+
 Acknowledgements
 ----------------
 
