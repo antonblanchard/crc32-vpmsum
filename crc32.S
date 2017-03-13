@@ -19,9 +19,12 @@
  * Copyright (C) 2015 Anton Blanchard <anton@au.ibm.com>, IBM
  *
  * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version
- * 2 of the License, or (at your option) any later version.
+ * modify it under the terms of either:
+ *
+ *  a) the GNU General Public License as published by the Free Software
+ *     Foundation; either version 2 of the License, or (at your option)
+ *     any later version, or
+ *  b) the Apache License, Version 2.0
  */
 #include <ppc-asm.h>
 #include "ppc-opcode.h"
