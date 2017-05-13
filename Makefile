@@ -1,12 +1,11 @@
-CFLAGS=-m64 -g -O2 -Wall
+CFLAGS=-m64 -g -O2 -mcpu=power8 -mpower8-vector -Wall
 ASFLAGS=-m64 -g
 LDFLAGS=-m64 -g -static
 
 # Ethernet CRC
 #CRC=0x04C11DB7
-#OPTIONS=
 
-# CRC32C
+# CRC32
 CRC=0x11EDC6F41
 OPTIONS=-r -x
 
@@ -31,9 +30,16 @@ PROGS=barrett_reduction_constants \
 
 
 PROGS_ALTIVEC=barrett_reduction_test \
-	final_fold_test \
+	final_fold_test	\
 	final_fold2_test \
-	crc32_test crc32_bench crc32_stress
+	crc32_test \
+	crc32_bench \
+	crc32_stress \
+	vec_barrett_reduction_test \
+	vec_final_fold_test \
+	vec_final_fold2_test \
+	vec_crc32_test \
+	vec_crc32_bench
 
 ifeq ($(call cc-option-yn,-maltivec),y)
 CFLAGS += -maltivec
@@ -53,15 +59,27 @@ barrett_reduction_test: barrett_reduction_test.o crcmodel.o barrett_reduction.o
 final_fold_test: final_fold_test.o crcmodel.o final_fold.o
 final_fold2_test: final_fold2_test.o crcmodel.o final_fold2.o
 
+vec_barrett_reduction_test: vec_barrett_reduction_test.o crcmodel.o \
+vec_barrett_reduction.o
+vec_final_fold_test: vec_final_fold_test.o crcmodel.o vec_final_fold.o
+vec_final_fold2_test: vec_final_fold2_test.o crcmodel.o vec_final_fold2.o
+
 crc32_constants.h: crc32_constants
 	$(EMULATOR) ./crc32_constants $(OPTIONS) $(CRC) > crc32_constants.h
 crc32.o: crc32.S crc32_constants.h
 crc32_stress.o: crc32_stress.c crc32_constants.h
 crc32_test.o: crc32_test.c crc32_constants.h
 crc32_wrapper.o: crc32_wrapper.c crc32_constants.h
+
 crc32_test: crc32_test.o crcmodel.o crc32.o crc32_wrapper.o
 crc32_bench: crc32_bench.o crcmodel.o crc32.o crc32_wrapper.o
 crc32_stress: crc32_stress.o crcmodel.o crc32.o crc32_wrapper.o
+
+vec_crc32.o: vec_crc32.c crc32_constants.h
+vec_crc32_test.o: vec_crc32_test.c crc32_constants.h
+vec_crc32_wrapper.o: vec_crc32_wrapper.c crc32_constants.h
+vec_crc32_test: vec_crc32_test.o crcmodel.o vec_crc32.o vec_crc32_wrapper.o
+vec_crc32_bench: vec_crc32_bench.o crcmodel.o vec_crc32.o crc32_wrapper.o
 
 clean:
 	rm -f crc32_constants.h *.o $(PROGS) $(PROGS_ALTIVEC)

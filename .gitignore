@@ -41,3 +41,8 @@ final_fold2_test
 final_fold_constants
 final_fold_test
 slice_by_8_bench
+vec_barrett_reduction_test
+vec_final_fold_test
+vec_final_fold2_test
+vec_crc32_test
+vec_crc32_bench
