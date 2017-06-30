@@ -34,13 +34,29 @@ to mitigate any I/O induced variability.
 Quick start
 -----------
 
+There's two different versions of crc32. They are, basically, the same 
+algorithm. The only difference is that one is implemented in pure assembly 
+(crc32.S) and the other in C using gcc (power8) vector intrinsics and 
+builtins (vec_crc32.c) to make the compiler generate the asm instructions 
+instead.  
+
 - Modify CRC and OPTIONS in the Makefile. There are examples for the two most
   common crc32s.
 
 - Type make to create the constants (crc32_constants.h)
 
+**If you will use the pure asm version**
+
 - Import the code into your application (crc32.S crc32_wrapper.c
-  crc32_constants.h ppc-opcode.h) and call the CRC:
+  crc32_constants.h ppc-opcode.h)
+
+**If you will use the C version**
+
+- Import the code into your application (vec_crc32.c vec_crc32_wrapper.c                
+  crc32_constants.h)
+
+- Call the CRC:
+
 
 ```
 unsigned int crc32_vpmsum(unsigned int crc, unsigned char *p, unsigned long len);
