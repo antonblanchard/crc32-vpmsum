@@ -11,11 +11,13 @@
  */
 #define BLOCKING	(32*1024)
 
-static void print_header() {
+static void print_header(int argc, char *argv[]) {
 	printf("/*\n");
 	printf("*\n");
-	printf("* THIS FILE IS GENERATED\n");
-	printf("* DO NOT MODIFY IT MANUALLY!\n");
+	printf("* THIS FILE IS GENERATED WITH\n");
+	while (argc-- > 0)
+		printf("%s ", argv++[0]);
+	printf("\n\n* DO NOT MODIFY IT MANUALLY!\n");
 	printf("*\n");
 	printf("*/\n\n");
 }
@@ -349,7 +351,7 @@ int main(int argc, char *argv[])
 	}
 
 	crc = strtoul(argv[optind], NULL, 0);
-	print_header();
+	print_header(argc, argv);
 
 	if (reflect)
 		do_reflected(crc, xor);
