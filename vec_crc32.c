@@ -29,7 +29,6 @@
  *  b) the Apache License, Version 2.0
  */
 
-#include <stdio.h>
 #include <altivec.h>
 
 #define POWER8_INTRINSICS

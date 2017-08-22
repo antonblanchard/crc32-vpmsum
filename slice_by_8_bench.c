@@ -2,6 +2,7 @@
 #include <malloc.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 # define tole(x) (x)

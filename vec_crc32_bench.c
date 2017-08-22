@@ -1,6 +1,7 @@
 #include <malloc.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 unsigned int crc32_vpmsum(unsigned int crc, unsigned char *p, unsigned long len);
 
