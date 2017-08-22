@@ -43,7 +43,7 @@ static void create_table(unsigned int crc, int reflect)
 	}
 
 	printf("};\n\n");
-	printf("#endif\n");
+	printf("#endif /* CRC_TABLE */\n");
 }
 
 static void do_nonreflected(unsigned int crc, int xor)
@@ -54,10 +54,9 @@ static void do_nonreflected(unsigned int crc, int xor)
 	printf("#define CRC 0x%x\n", crc);
 	if (xor)
 		printf("#define CRC_XOR\n");
+	printf("#define MAX_SIZE    %d\n", BLOCKING);
 	printf("\n#ifndef __ASSEMBLY__\n");
 	create_table(crc, 0);
-	printf("#else\n");
-	printf("#define MAX_SIZE    %d\n", BLOCKING);
 	/* Generate vector constants. */
 	printf("#ifdef POWER8_INTRINSICS\n");
 	printf("\n/* Constants */\n");
@@ -140,7 +139,8 @@ static void do_nonreflected(unsigned int crc, int xor)
 	#endif
 	printf("\t};\n");
 
-	printf("#else\n"); /* Generate asm constants*/
+	printf("#endif /* POWER8_INTRINSICS */\n\n");
+	printf("#else /* __ASSEMBLY__ */\n");
 	printf(".constants:\n");
 
 	printf("\n\t/* Reduce %d kbits to 1024 bits */\n", BLOCKING*8);
@@ -172,8 +172,7 @@ static void do_nonreflected(unsigned int crc, int xor)
 	printf("\t/* Barrett constant n */\n");
 	printf("\t.octa 0x%032lx\n", (1UL << 32) | crc);
 
-	printf("#endif\n");
-	printf("#endif\n");
+	printf("#endif /* __ASSEMBLY__ */\n");
 }
 
 static void do_reflected(unsigned int crc, int xor)
@@ -185,10 +184,9 @@ static void do_reflected(unsigned int crc, int xor)
 	if (xor)
 		printf("#define CRC_XOR\n");
 	printf("#define REFLECT\n");
+	printf("#define MAX_SIZE    %d\n", BLOCKING);
 	printf("\n#ifndef __ASSEMBLY__\n");
 	create_table(crc, 1);
-	printf("#else\n");
-	printf("#define MAX_SIZE    %d\n", BLOCKING);
 	/* Generate vector constants (reflected). */
 	printf("#ifdef POWER8_INTRINSICS\n");
 	printf("\n/* Constants */\n");
@@ -274,7 +272,8 @@ static void do_reflected(unsigned int crc, int xor)
 	#endif
 	printf("\t};\n");
 
-	printf("#else\n"); /*Generate asm constants (reflected)*/
+	printf("#endif /* POWER8_INTRINSICS */\n\n");
+	printf("#else /* __ASSEMBLY__ */\n");
 	printf(".constants:\n");
 
 	printf("\n\t/* Reduce %d kbits to 1024 bits */\n", BLOCKING*8);
@@ -306,8 +305,7 @@ static void do_reflected(unsigned int crc, int xor)
 	printf("\t/* 33 bit reflected Barrett constant n */\n");
 	printf("\t.octa 0x%032lx\n", reflect((1UL << 32) | crc, 33));
 
-	printf("#endif\n");
-	printf("#endif\n");
+	printf("#endif /* __ASSEMBLY__ */\n");
 }
 
 static void usage(void)

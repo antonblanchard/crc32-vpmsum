@@ -32,7 +32,6 @@
 #include <stdio.h>
 #include <altivec.h>
 
-#define __ASSEMBLY__
 #define POWER8_INTRINSICS
 
 #include "crc32_constants.h"
