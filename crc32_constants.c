@@ -64,26 +64,33 @@ static void do_nonreflected(unsigned int crc, int xor)
 	printf("\nstatic const __vector unsigned long vcrc_const[%d]\n",
 		((BLOCKING*8)/1024)-1);
 	printf("\t__attribute__((aligned (16))) = {\n");
+	printf("#ifdef __LITTLE_ENDIAN__\n");
 	for (i = (BLOCKING*8)-1024; i > 0; i -= 1024) {
 		a = get_remainder(crc, 32, i+64);
 		b = get_remainder(crc, 32, i);
 		/* Print two remainders. */
 		printf("\t\t/* x^%u mod p(x)` , x^%u mod p(x)` */\n", i+64, i);
 		if (i != 1024) {
-			#if defined(__LITTLE_ENDIAN__)
 			printf("\t\t{ 0x%016lx, 0x%016lx },\n", b, a);
-			#else
-			printf("\t\t{ 0x%016lx, 0x%016lx },\n", a, b);
-			#endif
 		} else {
 			/* Do not print comma on the last element of the array. */
-			#if defined(__LITTLE_ENDIAN__)
 			printf("\t\t{ 0x%016lx, 0x%016lx }\n", b, a);
-			#else
-			printf("\t\t{ 0x%016lx, 0x%016lx }\n", a, b);
-			#endif
 		}
 	}
+	printf("#else /* __LITTLE_ENDIAN__ */\n");
+	for (i = (BLOCKING*8)-1024; i > 0; i -= 1024) {
+		a = get_remainder(crc, 32, i+64);
+		b = get_remainder(crc, 32, i);
+		/* Print two remainders. */
+		printf("\t\t/* x^%u mod p(x)` , x^%u mod p(x)` */\n", i+64, i);
+		if (i != 1024) {
+			printf("\t\t{ 0x%016lx, 0x%016lx },\n", a, b);
+		} else {
+			/* Do not print comma on the last element of the array. */
+			printf("\t\t{ 0x%016lx, 0x%016lx }\n", a, b);
+		}
+	}
+	printf("#endif /* __LITTLE_ENDIAN__ */\n");
 	printf("\t};\n");
 
 
@@ -92,6 +99,7 @@ static void do_nonreflected(unsigned int crc, int xor)
 	printf("\nstatic const __vector unsigned long vcrc_short_const[%d]\n",
 		((1024*2)/128));
 	printf("\t__attribute__((aligned (16))) = {\n");
+	printf("#ifdef __LITTLE_ENDIAN__\n");
 	for (i = (1024*2)-128; i >= 0; i -= 128) {
 		a = get_remainder(crc, 32, i+128);
 		b = get_remainder(crc, 32, i+96);
@@ -102,20 +110,30 @@ static void do_nonreflected(unsigned int crc, int xor)
 		printf("\t\t/* x^%u mod p(x) , x^%u mod p(x) , x^%u mod p(x) , "
 			"x^%u mod p(x)  */\n", i+128, i+96, i+64, i+32);
 		if (i != 0) {
-			#if defined(__LITTLE_ENDIAN__)
 			printf("\t\t{ 0x%08lx%08lx, 0x%08lx%08lx },\n", c, d, a, b);
-			#else
-            printf("\t\t{ 0x%08lx%08lx, 0x%08lx%08lx },\n", a, b, c, d);
-			#endif
 		} else {
 			/* Do not print comma on the last element of the array. */
-			#if defined(__LITTLE_ENDIAN__)
 			printf("\t\t{ 0x%08lx%08lx, 0x%08lx%08lx }\n", c, d, a, b);
-			#else
-            printf("\t\t{ 0x%08lx%08lx, 0x%08lx%08lx }\n", a, b, c, d);
-			#endif
 		}
 	}
+	printf("#else /* __LITTLE_ENDIAN__ */\n");
+	for (i = (1024*2)-128; i >= 0; i -= 128) {
+		a = get_remainder(crc, 32, i+128);
+		b = get_remainder(crc, 32, i+96);
+		c = get_remainder(crc, 32, i+64);
+		d = get_remainder(crc, 32, i+32);
+
+		/* Print four remainders. */
+		printf("\t\t/* x^%u mod p(x) , x^%u mod p(x) , x^%u mod p(x) , "
+			"x^%u mod p(x)  */\n", i+128, i+96, i+64, i+32);
+		if (i != 0) {
+			printf("\t\t{ 0x%08lx%08lx, 0x%08lx%08lx },\n", a, b, c, d);
+		} else {
+			/* Do not print comma on the last element of the array. */
+			printf("\t\t{ 0x%08lx%08lx, 0x%08lx%08lx }\n", a, b, c, d);
+		}
+	}
+	printf("#endif /* __LITTLE_ENDIAN__ */\n");
 	printf("\t};\n");
 
 	printf("\n/* Barrett constants */\n");
@@ -123,20 +141,15 @@ static void do_nonreflected(unsigned int crc, int xor)
 	printf("\nstatic const __vector unsigned long v_Barrett_const[%d]\n"
 		, 2);
 	printf("\t__attribute__((aligned (16))) = {\n");
-	/* Print quotient. */
+	/* Print quotient and Barrett constant. */
 	printf("\t\t/* x^%u div p(x)  */\n", 64);
-	#if defined (__LITTLE_ENDIAN__)
+	printf("#ifdef __LITTLE_ENDIAN__\n");
 	printf("\t\t{ 0x%016lx, 0x%016lx },\n", get_quotient(crc, 32, 64), 0UL);
-	#else
-    printf("\t\t{ 0x%016lx, 0x%016lx },\n", 0UL, get_quotient(crc, 32, 64));
-	#endif
-	printf("\t\t/* 33 bit reflected Barrett constant n */\n");
-	/* Print Barrett constant. */
-	#if defined (__LITTLE_ENDIAN__)
 	printf("\t\t{ 0x%016lx, 0x%016lx }\n", (1UL << 32) | crc, 0UL);
-	#else
-    printf("\t\t{ 0x%016lx, 0x%016lx }\n", 0UL, (1UL << 32) | crc);
-	#endif
+	printf("#else /* __LITTLE_ENDIAN__ */\n");
+	printf("\t\t{ 0x%016lx, 0x%016lx },\n", 0UL, get_quotient(crc, 32, 64));
+	printf("\t\t{ 0x%016lx, 0x%016lx }\n", 0UL, (1UL << 32) | crc);
+	printf("#endif /* __LITTLE_ENDIAN__ */\n");
 	printf("\t};\n");
 
 	printf("#endif /* POWER8_INTRINSICS */\n\n");
@@ -194,6 +207,7 @@ static void do_reflected(unsigned int crc, int xor)
 	printf("\nstatic const __vector unsigned long vcrc_const[%d]\n",
 		((BLOCKING*8)/1024)-1);
 	printf("\t__attribute__((aligned (16))) = {\n");
+	printf("#ifdef __LITTLE_ENDIAN__\n");
 	for (i = (BLOCKING*8)-1024; i > 0; i -= 1024) {
 		a = reflect(get_remainder(crc, 32, i), 32) << 1;
 		b = reflect(get_remainder(crc, 32, i+64), 32) << 1;
@@ -201,20 +215,27 @@ static void do_reflected(unsigned int crc, int xor)
 		/* Print two remainders. */
 		printf("\t\t/* x^%u mod p(x)` << 1, x^%u mod p(x)` << 1 */\n", i, i+64);
 		if (i != 1024) {
-			#if defined(__LITTLE_ENDIAN__)
 			printf("\t\t{ 0x%016lx, 0x%016lx },\n", b, a);
-			#else
-			printf("\t\t{ 0x%016lx, 0x%016lx },\n", a, b);
-			#endif
 		} else {
 			/* Do not print comma on the last element of the array. */
-			#if defined (__LITTLE_ENDIAN__)
 			printf("\t\t{ 0x%016lx, 0x%016lx }\n", b, a);
-			#else
-            printf("\t\t{ 0x%016lx, 0x%016lx }\n", a, b);
-			#endif
 		}
 	}
+	printf("#else /* __LITTLE_ENDIAN__ */\n");
+	for (i = (BLOCKING*8)-1024; i > 0; i -= 1024) {
+		a = reflect(get_remainder(crc, 32, i), 32) << 1;
+		b = reflect(get_remainder(crc, 32, i+64), 32) << 1;
+
+		/* Print two remainders. */
+		printf("\t\t/* x^%u mod p(x)` << 1, x^%u mod p(x)` << 1 */\n", i, i+64);
+		if (i != 1024) {
+			printf("\t\t{ 0x%016lx, 0x%016lx },\n", a, b);
+		} else {
+			/* Do not print comma on the last element of the array. */
+			printf("\t\t{ 0x%016lx, 0x%016lx }\n", a, b);
+		}
+	}
+	printf("#endif /* __LITTLE_ENDIAN__ */\n");
 	printf("\t};\n");
 
 
@@ -223,6 +244,7 @@ static void do_reflected(unsigned int crc, int xor)
 	printf("\nstatic const __vector unsigned long vcrc_short_const[%d]\n",
 		((1024*2)/128));
 	printf("\t__attribute__((aligned (16))) = {\n");
+	printf("#ifdef __LITTLE_ENDIAN__\n");
 	for (i = (1024*2)-128; i >= 0; i -= 128) {
 		a = reflect(get_remainder(crc, 32, i+32), 32);
 		b = reflect(get_remainder(crc, 32, i+64), 32);
@@ -233,20 +255,30 @@ static void do_reflected(unsigned int crc, int xor)
 		printf("\t\t/* x^%u mod p(x) , x^%u mod p(x) , x^%u mod p(x) , "
 			"x^%u mod p(x)  */\n", i+32, i+64, i+96, i+128);
 		if (i != 0) {
-			#if defined(__LITTLE_ENDIAN__)
 			printf("\t\t{ 0x%08lx%08lx, 0x%08lx%08lx },\n", c, d, a, b);
-			#else
-            printf("\t\t{ 0x%08lx%08lx, 0x%08lx%08lx },\n", a, b, c, d);
-			#endif
 		} else {
 			/* Do not print comma on the last element of the array. */
-			#if defined(__LITTLE_ENDIAN__)
 			printf("\t\t{ 0x%08lx%08lx, 0x%08lx%08lx }\n", c, d, a, b);
-			#else
-            printf("\t\t{ 0x%08lx%08lx, 0x%08lx%08lx }\n", a, b, c, d);
-			#endif
 		}
 	}
+	printf("#else /* __LITTLE_ENDIAN__ */\n");
+	for (i = (1024*2)-128; i >= 0; i -= 128) {
+		a = reflect(get_remainder(crc, 32, i+32), 32);
+		b = reflect(get_remainder(crc, 32, i+64), 32);
+		c = reflect(get_remainder(crc, 32, i+96), 32);
+		d = reflect(get_remainder(crc, 32, i+128), 32);
+
+		/* Print four remainders. */
+		printf("\t\t/* x^%u mod p(x) , x^%u mod p(x) , x^%u mod p(x) , "
+			"x^%u mod p(x)  */\n", i+32, i+64, i+96, i+128);
+		if (i != 0) {
+			printf("\t\t{ 0x%08lx%08lx, 0x%08lx%08lx },\n", a, b, c, d);
+		} else {
+			/* Do not print comma on the last element of the array. */
+			printf("\t\t{ 0x%08lx%08lx, 0x%08lx%08lx }\n", a, b, c, d);
+		}
+	}
+	printf("#endif /* __LITTLE_ENDIAN__ */\n");
 	printf("\t};\n");
 
 	printf("\n/* Barrett constants */\n");
@@ -254,22 +286,15 @@ static void do_reflected(unsigned int crc, int xor)
 	printf("\nstatic const __vector unsigned long v_Barrett_const[%d]\n"
 		, 2);
 	printf("\t__attribute__((aligned (16))) = {\n");
-	/* Print quotient. */
+	/* Print quotient and Barrett constant. */
 	printf("\t\t/* x^%u div p(x)  */\n", 64);
-	#if defined(__LITTLE_ENDIAN__)
-	printf("\t\t{ 0x%016lx, 0x%016lx },\n", reflect(get_quotient(crc, 32, 64),
-												33), 0UL);
-	#else
-    printf("\t\t{ 0x%016lx, 0x%016lx },\n", 0UL, reflect(get_quotient(crc, 32,
-													64),33));
-	#endif
-	printf("\t\t/* 33 bit reflected Barrett constants n */\n");
-	/* Print Barrett constant. */
-	#if defined(__LITTLE_ENDIAN__)
+	printf("#ifdef __LITTLE_ENDIAN__\n");
+	printf("\t\t{ 0x%016lx, 0x%016lx },\n", reflect(get_quotient(crc, 32, 64), 33), 0UL);
 	printf("\t\t{ 0x%016lx, 0x%016lx }\n", reflect((1UL << 32) | crc, 33), 0UL);
-	#else
-    printf("\t\t{ 0x%016lx, 0x%016lx }\n", 0UL, reflect((1UL << 32) | crc, 33));
-	#endif
+	printf("#else /* __LITTLE_ENDIAN__ */\n");
+	printf("\t\t{ 0x%016lx, 0x%016lx },\n", 0UL, reflect(get_quotient(crc, 32, 64),33));
+	printf("\t\t{ 0x%016lx, 0x%016lx }\n", 0UL, reflect((1UL << 32) | crc, 33));
+	printf("#endif /* __LITTLE_ENDIAN__ */\n");
 	printf("\t};\n");
 
 	printf("#endif /* POWER8_INTRINSICS */\n\n");
