@@ -249,3 +249,7 @@ Acknowledgements
 
 Thanks to Michael Gschwind, Jeff Derby, Lorena Pesantez and Stewart Smith
 for their ideas and assistance.
+
+Thanks Rogerio Alves for writing the C implementation.
+
+Thanks Daniel Black for cleanup and testing.
