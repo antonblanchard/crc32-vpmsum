@@ -47,7 +47,7 @@ static void create_table(unsigned int crc, int reflect)
 	printf("#endif /* CRC_TABLE */\n");
 }
 
-static void do_nonreflected(unsigned int crc, int xor)
+static void do_nonreflected(unsigned int crc, int xor, int assembler, int p8intrinsics)
 {
 	int i;
 	unsigned long a, b, c, d;
@@ -58,6 +58,10 @@ static void do_nonreflected(unsigned int crc, int xor)
 	printf("#define MAX_SIZE    %d\n", BLOCKING);
 	printf("\n#ifndef __ASSEMBLY__\n");
 	create_table(crc, 0);
+
+	if (!p8intrinsics)
+		goto skip_p8_intrinsics;
+
 	/* Generate vector constants. */
 	printf("#ifdef POWER8_INTRINSICS\n");
 	printf("\n/* Constants */\n");
@@ -154,6 +158,12 @@ static void do_nonreflected(unsigned int crc, int xor)
 	printf("\t};\n");
 
 	printf("#endif /* POWER8_INTRINSICS */\n\n");
+
+skip_p8_intrinsics:
+
+	if (!assembler)
+		goto skip_assembler;
+
 	printf("#else /* __ASSEMBLY__ */\n");
 	printf(".constants:\n");
 
@@ -186,10 +196,12 @@ static void do_nonreflected(unsigned int crc, int xor)
 	printf("\t/* Barrett constant n */\n");
 	printf("\t.octa 0x%032lx\n", (1UL << 32) | crc);
 
+skip_assembler:
+
 	printf("#endif /* __ASSEMBLY__ */\n");
 }
 
-static void do_reflected(unsigned int crc, int xor)
+static void do_reflected(unsigned int crc, int xor, int assembler, int p8intrinsics)
 {
 	int i;
 	unsigned long a, b, c, d;
@@ -202,6 +214,10 @@ static void do_reflected(unsigned int crc, int xor)
 	printf("\n#ifndef __ASSEMBLY__\n");
 	create_table(crc, 1);
 	/* Generate vector constants (reflected). */
+
+	if (!p8intrinsics)
+		goto skip_p8_intrinsics;
+
 	printf("#ifdef POWER8_INTRINSICS\n");
 	printf("\n/* Constants */\n");
 	printf("\n/* Reduce %d kbits to 1024 bits */", BLOCKING*8);
@@ -299,6 +315,12 @@ static void do_reflected(unsigned int crc, int xor)
 	printf("\t};\n");
 
 	printf("#endif /* POWER8_INTRINSICS */\n\n");
+
+skip_p8_intrinsics:
+
+	if (!assembler)
+		goto skip_assembler;
+
 	printf("#else /* __ASSEMBLY__ */\n");
 	printf(".constants:\n");
 
@@ -331,6 +353,8 @@ static void do_reflected(unsigned int crc, int xor)
 	printf("\t/* 33 bit reflected Barrett constant n */\n");
 	printf("\t.octa 0x%032lx\n", reflect((1UL << 32) | crc, 33));
 
+skip_assembler:
+
 	printf("#endif /* __ASSEMBLY__ */\n");
 }
 
@@ -340,16 +364,22 @@ static void usage(char *argv[])
 	fprintf(stderr, "\tCRC without top bit\n");
 	fprintf(stderr, "\t-r bit reflect\n");
 	fprintf(stderr, "\t-x xor input and ouput\n");
+	fprintf(stderr, "\t-a generate constants for assembler implementaiton\n");
+	fprintf(stderr, "\t-c generate constants for P8 intrinsics (C) implementation\n");
+	fprintf(stderr, "Without -a or -c - both will be generated\n");
+	fprintf(stderr, "Usual usage is to redirect this into a file called crc32_constants.h\n");
 }
 
 int main(int argc, char *argv[])
 {
 	int reflect = 0;
 	int xor = 0;
+	int p8intrinsics = 0;
+	int assembler = 0;
 	unsigned int crc;
 
 	while (1) {
-		signed char c = getopt(argc, argv, "rx");
+		signed char c = getopt(argc, argv, "rxac");
 		if (c < 0)
 			break;
 
@@ -360,6 +390,14 @@ int main(int argc, char *argv[])
 
 		case 'x':
 			xor = 1;
+			break;
+
+		case 'c':
+			p8intrinsics = 1;
+			break;
+
+		case 'a':
+			assembler = 1;
 			break;
 
 		default:
@@ -377,10 +415,13 @@ int main(int argc, char *argv[])
 	crc = strtoul(argv[optind], NULL, 0);
 	print_header(argc, argv);
 
+	/* neither specified so use both */
+	if (assembler == 0 && p8intrinsics == 0) assembler = p8intrinsics = 1;
+
 	if (reflect)
-		do_reflected(crc, xor);
+		do_reflected(crc, xor, assembler, p8intrinsics);
 	else
-		do_nonreflected(crc, xor);
+		do_nonreflected(crc, xor, assembler, p8intrinsics);
 
 	return 0;
 }
