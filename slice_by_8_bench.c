@@ -592,7 +592,8 @@ int main(int argc, char *argv[])
 	unsigned int crc = 0;
 
 	if (argc != 3) {
-		fprintf(stderr, "Usage: crc32_bench length iterations\n");
+		fprintf(stderr, "Usage: %s length iterations\n\n", argv[0]);
+		fprintf(stderr, "Performs crc32 checksum an [iterations] number of times on a buffer filled with junk data of [length] bytes\n");
 		exit(1);
 	}
 

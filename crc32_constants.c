@@ -17,7 +17,8 @@ static void print_header(int argc, char *argv[]) {
 	printf("* THIS FILE IS GENERATED WITH\n");
 	while (argc-- > 0)
 		printf("%s ", argv++[0]);
-	printf("\n\n* DO NOT MODIFY IT MANUALLY!\n");
+	printf("\n\n* This is from https://github.com/antonblanchard/crc32-vpmsum/\n");
+	printf("* DO NOT MODIFY IT MANUALLY!\n");
 	printf("*\n");
 	printf("*/\n\n");
 }
@@ -333,9 +334,9 @@ static void do_reflected(unsigned int crc, int xor)
 	printf("#endif /* __ASSEMBLY__ */\n");
 }
 
-static void usage(void)
+static void usage(char *argv[])
 {
-	fprintf(stderr, "Usage: crc32_constants {-r} {-x} CRC\n");
+	fprintf(stderr, "Usage: %s {-r} {-x} CRC\n", argv[0]);
 	fprintf(stderr, "\tCRC without top bit\n");
 	fprintf(stderr, "\t-r bit reflect\n");
 	fprintf(stderr, "\t-x xor input and ouput\n");
@@ -362,14 +363,14 @@ int main(int argc, char *argv[])
 			break;
 
 		default:
-			usage();
+			usage(argv);
 			exit(1);
 			break;
 		}
 	}
 
 	if ((argc - optind) != 1) {
-		usage();
+		usage(argv);
 		exit(1);
 	}
 

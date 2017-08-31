@@ -61,7 +61,8 @@ int main(int argc, char *argv[])
 	unsigned int crc, verify;
 
 	if (argc != 3) {
-		fprintf(stderr, "Usage: crc32_test initial_value length\n");
+		fprintf(stderr, "Usage: %s initial_value length\n", argv[0]);
+		fprintf(stderr, "Verifies the crc32_vpmsum returns the same result as a reference implementation [initial_value] is checksummed with [length] bytes of junk data.\n");
 		exit(1);
 	}
 
