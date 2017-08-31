@@ -73,6 +73,7 @@ $(CRC32_CONSTANTS_OBJS) : %.o : %.c Makefile
 
 crc32_constants.h: crc32_constants
 	$(EMULATOR) ./crc32_constants $(OPTIONS) $(CRC) > crc32_constants.h
+
 crc32.o: crc32.S crc32_constants.h
 crc32_stress.o: crc32_stress.c crc32_constants.h
 crc32_test.o: crc32_test.c crc32_constants.h
@@ -83,9 +84,11 @@ crc32_bench: crc32_bench.o crc32.o crc32_wrapper.o
 crc32_stress: crc32_stress.o crcmodel.o crc32.o crc32_wrapper.o
 
 vec_crc32.o: vec_crc32.c crc32_constants.h
-vec_crc32_test.o: vec_crc32_test.c crc32_constants.h
-vec_crc32_test: vec_crc32_test.o crcmodel.o vec_crc32.o
-vec_crc32_bench: vec_crc32_bench.o vec_crc32.o
+vec_crc32_test: crc32_test.o crcmodel.o vec_crc32.o
+vec_crc32_bench: crc32_bench.o vec_crc32.o
+
+vec_crc32_test vec_crc32_bench:
+	$(CC) $(LDFLAGS) $^ -o $@
 
 clean:
 	rm -f crc32_constants.h *.o $(PROGS) $(PROGS_ALTIVEC)
