@@ -79,6 +79,8 @@ crc32_stress.o: crc32_stress.c crc32_constants.h
 crc32_test.o: crc32_test.c crc32_constants.h
 crc32_wrapper.o: crc32_wrapper.c crc32_constants.h
 
+slice_by_8_bench: crc32_bench.o
+
 crc32_test: crc32_test.o crcmodel.o crc32.o crc32_wrapper.o
 crc32_bench: crc32_bench.o crc32.o crc32_wrapper.o
 crc32_stress: crc32_stress.o crcmodel.o crc32.o crc32_wrapper.o
