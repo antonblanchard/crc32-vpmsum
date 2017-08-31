@@ -584,35 +584,17 @@ static inline unsigned int crc32(unsigned int crc, unsigned char const *buf, uns
 	return crc;
 }
 
-int main(int argc, char *argv[])
+/* its not really a vpmsum but keep the name to link with other test programs */
+
+#ifndef CRC32_FUNCTION
+#define CRC32_FUNCTION     crc32_vpmsum
+#endif
+
+unsigned int CRC32_FUNCTION(unsigned int crc, unsigned char *p,
+			  unsigned long len)
 {
-	unsigned long length, iterations;
-	unsigned char *data;
-	unsigned long i;
-	unsigned int crc = 0;
+	crc = tobe(crc);
+	crc = crc32(crc, p, len, (const unsigned int (*)[256])crc32table_be);
+	return tobe(crc);
 
-	if (argc != 3) {
-		fprintf(stderr, "Usage: %s length iterations\n\n", argv[0]);
-		fprintf(stderr, "Performs crc32 checksum an [iterations] number of times on a buffer filled with junk data of [length] bytes\n");
-		exit(1);
-	}
-
-	length = strtoul(argv[1], NULL, 0);
-	iterations = strtoul(argv[2], NULL, 0);
-
-	data = memalign(getpagesize(), length);
-
-	srandom(1);
-	for (i = 0; i < length; i++)
-		data[i] = random() & 0xff;
-
-	for (i = 0; i < iterations; i++) {
-		crc = tobe(crc);
-		crc = crc32(crc, data, length, (const unsigned int (*)[256])crc32table_be);
-		crc = tobe(crc);
-	}
-
-	printf("CRC: %08x\n", crc);
-
-	return 0;
 }
