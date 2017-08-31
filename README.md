@@ -52,8 +52,7 @@ instead.
 
 **If you will use the C version**
 
-- Import the code into your application (vec_crc32.c vec_crc32_wrapper.c                
-  crc32_constants.h)
+- Import the code into your application (vec_crc32.c crc32_constants.h)
 
 - Call the CRC:
 
