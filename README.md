@@ -61,6 +61,26 @@ instead.
 unsigned int crc32_vpmsum(unsigned int crc, unsigned char *p, unsigned long len);
 ```
 
+Advanced Usage
+--------------
+
+Occasionally you may have a number of CRC32 polynomial implementations.
+
+To do this you'll need to compile the C or assembler implementation with a
+different constants header file and change the function names to avoid linker
+conflicts.
+
+To facilitate this optional defines can be introduced:
+
+- CRC32_CONSTANTS_HEADER to be set to the *quoted* header filename.
+
+- CRC32_FUNCTION to be set to the crc32 function name (instead of crc32_vpmsum)
+
+- CRC32_FUNCTION_ASM (asm version only) to be set to the assember function name used
+by crc32_wrapper.c (defaults to __crc32_vpmsum).
+
+An example of this is with crc32_two_implementations as found in the Makefile.
+
 CRC background
 --------------
 
