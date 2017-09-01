@@ -46,3 +46,6 @@ vec_final_fold_test
 vec_final_fold2_test
 vec_crc32_test
 vec_crc32_bench
+crc32_ethernet_constants.h
+crc32k_constants.h
+crc32_two_implementations

@@ -41,7 +41,8 @@ PROGS_ALTIVEC=barrett_reduction_test \
 	vec_final_fold_test \
 	vec_final_fold2_test \
 	vec_crc32_test \
-	vec_crc32_bench
+	vec_crc32_bench \
+	crc32_two_implementations
 
 CRC32_CONSTANTS_OBJS=crc32_constants.o poly_arithmetic.o crcmodel.o
 ifeq ($(call cc-option-yn,-maltivec),y)
@@ -92,5 +93,31 @@ vec_crc32_bench: crc32_bench.o vec_crc32.o
 vec_crc32_test vec_crc32_bench:
 	$(CC) $(LDFLAGS) $^ -o $@
 
+# This is an example of multiple crc32 polynomials being used
+# in a single linked file.
+crc32_ethernet_constants.h: crc32_constants
+	$(EMULATOR) ./crc32_constants -c -r -x 0x4c11db7 > $@
+
+vec_crc32_ethernet.o: vec_crc32.c crc32_ethernet_constants.h
+	$(CC) -c $(CFLAGS) \
+		-D CRC32_FUNCTION=crc32ethernet \
+		-D CRC32_CONSTANTS_HEADER=\"crc32_ethernet_constants.h\" \
+		vec_crc32.c -o $@
+
+crc32k_constants.h: crc32_constants
+	$(EMULATOR) ./crc32_constants -a -r -x 0x741B8CD7 > $@
+
+crc32k_wrapper.o: crc32_wrapper.c crc32k_constants.h
+crc32k.o: crc32.S crc32k_constants.h
+
+crc32k_wrapper.o crc32k.o:
+	$(CC) -c $(CFLAGS) \
+		-D CRC32_FUNCTION=crc32k \
+		-D CRC32_FUNCTION_ASM=crc32k_asm \
+		-D CRC32_CONSTANTS_HEADER=\"crc32k_constants.h\" \
+		$< -o $@
+
+crc32_two_implementations: crc32k_wrapper.o crc32k.o vec_crc32_ethernet.o
+
 clean:
-	rm -f crc32_constants.h *.o $(PROGS) $(PROGS_ALTIVEC)
+	rm -f crc32_constants.h crc32k_constants.h crc32_ethernet_constants.h *.o $(PROGS) $(PROGS_ALTIVEC)

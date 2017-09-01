@@ -47,7 +47,11 @@
 	.octa 0x0F0E0D0C0B0A09080706050403020100
 
 #define __ASSEMBLY__
+#ifdef CRC32_CONSTANTS_HEADER
+#include CRC32_CONSTANTS_HEADER
+#else
 #include "crc32_constants.h"
+#endif
 
 	.text
 
@@ -81,8 +85,12 @@
 #define VPERM(A, B, C, D)
 #endif
 
+#ifndef CRC32_FUNCTION_ASM
+#define CRC32_FUNCTION_ASM __crc32_vpmsum
+#endif
+
 /* unsigned int __crc32_vpmsum(unsigned int crc, void *p, unsigned long len) */
-FUNC_START(__crc32_vpmsum)
+FUNC_START(CRC32_FUNCTION_ASM)
 	std	r31,-8(r1)
 	std	r30,-16(r1)
 	std	r29,-24(r1)
@@ -769,4 +777,4 @@ FUNC_START(__crc32_vpmsum)
 	mr	r3,r10
 	b	.Lout
 
-FUNC_END(__crc32_vpmsum)
+FUNC_END(CRC32_FUNCTION_ASM)
