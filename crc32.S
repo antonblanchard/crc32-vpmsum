@@ -46,7 +46,6 @@
 	/* byte reverse permute constant */
 	.octa 0x0F0E0D0C0B0A09080706050403020100
 
-#define __ASSEMBLY__
 #ifdef CRC32_CONSTANTS_HEADER
 #include CRC32_CONSTANTS_HEADER
 #else

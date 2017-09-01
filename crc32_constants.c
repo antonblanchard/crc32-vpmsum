@@ -56,7 +56,7 @@ static void do_nonreflected(unsigned int crc, int xor, int assembler, int p8intr
 	if (xor)
 		printf("#define CRC_XOR\n");
 	printf("#define MAX_SIZE    %d\n", BLOCKING);
-	printf("\n#ifndef __ASSEMBLY__\n");
+	printf("\n#ifndef __ASSEMBLER__\n");
 	create_table(crc, 0);
 
 	if (!p8intrinsics)
@@ -164,7 +164,7 @@ skip_p8_intrinsics:
 	if (!assembler)
 		goto skip_assembler;
 
-	printf("#else /* __ASSEMBLY__ */\n");
+	printf("#else /* __ASSEMBLER__ */\n");
 	printf(".constants:\n");
 
 	printf("\n\t/* Reduce %d kbits to 1024 bits */\n", BLOCKING*8);
@@ -198,7 +198,7 @@ skip_p8_intrinsics:
 
 skip_assembler:
 
-	printf("#endif /* __ASSEMBLY__ */\n");
+	printf("#endif /* __ASSEMBLER__ */\n");
 }
 
 static void do_reflected(unsigned int crc, int xor, int assembler, int p8intrinsics)
@@ -211,7 +211,7 @@ static void do_reflected(unsigned int crc, int xor, int assembler, int p8intrins
 		printf("#define CRC_XOR\n");
 	printf("#define REFLECT\n");
 	printf("#define MAX_SIZE    %d\n", BLOCKING);
-	printf("\n#ifndef __ASSEMBLY__\n");
+	printf("\n#ifndef __ASSEMBLER__\n");
 	create_table(crc, 1);
 	/* Generate vector constants (reflected). */
 
@@ -321,7 +321,7 @@ skip_p8_intrinsics:
 	if (!assembler)
 		goto skip_assembler;
 
-	printf("#else /* __ASSEMBLY__ */\n");
+	printf("#else /* __ASSEMBLER__ */\n");
 	printf(".constants:\n");
 
 	printf("\n\t/* Reduce %d kbits to 1024 bits */\n", BLOCKING*8);
@@ -355,7 +355,7 @@ skip_p8_intrinsics:
 
 skip_assembler:
 
-	printf("#endif /* __ASSEMBLY__ */\n");
+	printf("#endif /* __ASSEMBLER__ */\n");
 }
 
 static void usage(char *argv[])
