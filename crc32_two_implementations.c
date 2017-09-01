@@ -3,14 +3,16 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-unsigned int crc32_vpmsum(unsigned int crc, unsigned char *p, unsigned long len);
+unsigned int crc32k(unsigned int crc, unsigned char *p, unsigned long len);
+unsigned int crc32ethernet(unsigned int crc, unsigned char *p, unsigned long len);
 
 int main(int argc, char *argv[])
 {
 	unsigned long length, iterations;
 	unsigned char *data;
 	unsigned long i;
-	unsigned int crc = 0;
+	unsigned int crck = 0;
+	unsigned int crcethernet = 0;
 
 	if (argc != 3) {
 		fprintf(stderr, "Usage: %s length iterations\n", argv[0]);
@@ -27,10 +29,13 @@ int main(int argc, char *argv[])
 	for (i = 0; i < length; i++)
 		data[i] = random() & 0xff;
 
-	for (i = 0; i < iterations; i++)
-		crc = crc32_vpmsum(crc, data, length);
+	for (i = 0; i < iterations; i++) {
+		crcethernet = crc32ethernet(crcethernet, data, length);
+		crck = crc32k(crck, data, length);
+	}
 
-	printf("CRC: %08x\n", crc);
+	printf("CRC(k): %08x\n", crck);
+	printf("CRC(ethernet): %08x\n", crcethernet);
 
 	return 0;
 }
