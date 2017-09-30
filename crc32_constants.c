@@ -66,7 +66,7 @@ static void do_nonreflected(unsigned int crc, int xor, int assembler, int p8intr
 	printf("#ifdef POWER8_INTRINSICS\n");
 	printf("\n/* Constants */\n");
 	printf("\n/* Reduce %d kbits to 1024 bits */", BLOCKING*8);
-	printf("\nstatic const __vector unsigned long vcrc_const[%d]\n",
+	printf("\nstatic const __vector unsigned long long vcrc_const[%d]\n",
 		((BLOCKING*8)/1024)-1);
 	printf("\t__attribute__((aligned (16))) = {\n");
 	printf("#ifdef __LITTLE_ENDIAN__\n");
@@ -101,7 +101,7 @@ static void do_nonreflected(unsigned int crc, int xor, int assembler, int p8intr
 
 	printf("\n/* Reduce final 1024-2048 bits to 64 bits, shifting 32 bits to "
 		"include the trailing 32 bits of zeros */\n");
-	printf("\nstatic const __vector unsigned long vcrc_short_const[%d]\n",
+	printf("\nstatic const __vector unsigned long long vcrc_short_const[%d]\n",
 		((1024*2)/128));
 	printf("\t__attribute__((aligned (16))) = {\n");
 	printf("#ifdef __LITTLE_ENDIAN__\n");
@@ -143,7 +143,7 @@ static void do_nonreflected(unsigned int crc, int xor, int assembler, int p8intr
 
 	printf("\n/* Barrett constants */\n");
 	printf("/* 33 bit reflected Barrett constant m - (4^32)/n */\n");
-	printf("\nstatic const __vector unsigned long v_Barrett_const[%d]\n"
+	printf("\nstatic const __vector unsigned long long v_Barrett_const[%d]\n"
 		, 2);
 	printf("\t__attribute__((aligned (16))) = {\n");
 	/* Print quotient and Barrett constant. */
@@ -221,7 +221,7 @@ static void do_reflected(unsigned int crc, int xor, int assembler, int p8intrins
 	printf("#ifdef POWER8_INTRINSICS\n");
 	printf("\n/* Constants */\n");
 	printf("\n/* Reduce %d kbits to 1024 bits */", BLOCKING*8);
-	printf("\nstatic const __vector unsigned long vcrc_const[%d]\n",
+	printf("\nstatic const __vector unsigned long long vcrc_const[%d]\n",
 		((BLOCKING*8)/1024)-1);
 	printf("\t__attribute__((aligned (16))) = {\n");
 	printf("#ifdef __LITTLE_ENDIAN__\n");
@@ -258,7 +258,7 @@ static void do_reflected(unsigned int crc, int xor, int assembler, int p8intrins
 
 	printf("\n/* Reduce final 1024-2048 bits to 64 bits, shifting 32 bits to "
 		"include the trailing 32 bits of zeros */\n");
-	printf("\nstatic const __vector unsigned long vcrc_short_const[%d]\n",
+	printf("\nstatic const __vector unsigned long long vcrc_short_const[%d]\n",
 		((1024*2)/128));
 	printf("\t__attribute__((aligned (16))) = {\n");
 	printf("#ifdef __LITTLE_ENDIAN__\n");
@@ -300,7 +300,7 @@ static void do_reflected(unsigned int crc, int xor, int assembler, int p8intrins
 
 	printf("\n/* Barrett constants */\n");
 	printf("/* 33 bit reflected Barrett constant m - (4^32)/n */\n");
-	printf("\nstatic const __vector unsigned long v_Barrett_const[%d]\n"
+	printf("\nstatic const __vector unsigned long long v_Barrett_const[%d]\n"
 		, 2);
 	printf("\t__attribute__((aligned (16))) = {\n");
 	/* Print quotient and Barrett constant. */

@@ -24,8 +24,42 @@
  */
 #include <altivec.h>
 
+/*
+ * Those stubs fix clang incompatibilitie issues with GCC builtins.
+ */
+#if defined (__clang__)
+#define __builtin_crypto_vpmsumw __builtin_crypto_vpmsumb
+#define __builtin_crypto_vpmsumd __builtin_crypto_vpmsumb
+
+__vector unsigned long long __attribute__((overloadable))
+vec_ld(int __a, const __vector unsigned long long* __b)
+{
+	return (__vector unsigned long long)__builtin_altivec_lvx(__a, __b);
+}
+
+/*
+ * GCC __builtin_pack_vector_int128 returns a vector __int128_t but Clang
+ * seems to not recognize this type. On GCC this builtin is translated to a
+ * xxpermdi instruction that only move the registers __a, __b instead generates
+ * a load. Clang doesn't have this builtin or xxpermdi intrinsics. Was recently
+ * implemented https://reviews.llvm.org/rL303760.
+ * */
+__vector unsigned long long  __builtin_pack_vector (unsigned long __a,
+												    unsigned long __b)
+{
+	__vector unsigned long long __v = {__a, __b};
+	return __v;
+}
+
+unsigned long __builtin_unpack_vector (__vector unsigned long long __v,
+									   int __o)
+{
+	return __v[__o];
+}
+#endif
+
 #if defined(__LITTLE_ENDIAN__)
-static const __vector unsigned long vfold2_const[4]
+static const __vector unsigned long long vfold2_const[4]
 	__attribute__ ((aligned (16))) = {
 		/* x^128 mod p(x), x^96 mod p(x), x^64 mod p(x), x^32 mod p(x) */
 		{ 0x490d678d04c11db7UL, 0xe8a45605f200aa66UL },
@@ -37,7 +71,7 @@ static const __vector unsigned long vfold2_const[4]
 		{ 0x08090A0B0C0D0E0FUL, 0x0001020304050607UL }
 	};
 
-static const __vector unsigned long vfold2_reflect_const[4]
+static const __vector unsigned long long vfold2_reflect_const[4]
 	__attribute__ ((aligned (16))) = {
 		/* x^32 mod p(x)`, x^64 mod p(x)`, x^96 mod p(x)`, x^128 mod p(x)` */
 		{ 0x6655004fa06a2517UL, 0xedb88320b1e6b092UL },
@@ -49,7 +83,7 @@ static const __vector unsigned long vfold2_reflect_const[4]
 		{ 0x08090A0B0C0D0E0FUL, 0x0001020304050607UL }
 	};
 #else
-static const __vector unsigned long vfold2_const[4]
+static const __vector unsigned long long vfold2_const[4]
 	 __attribute__ ((aligned (16))) = {
 		/* x^128 mod p(x), x^96 mod p(x), x^64 mod p(x), x^32 mod p(x) */
 		{ 0xe8a45605f200aa66UL, 0x490d678d04c11db7UL },
@@ -61,7 +95,7 @@ static const __vector unsigned long vfold2_const[4]
 		{ 0x0F0E0D0C0B0A0908UL, 0X0706050403020100UL }
 	};
 
-static const __vector unsigned long vfold2_reflect_const[4]
+static const __vector unsigned long long vfold2_reflect_const[4]
 	__attribute__ ((aligned (16))) = {
 		/* x^32 mod p(x)`, x^64 mod p(x)`, x^96 mod p(x)`, x^128 mod p(x)` */
 		{ 0xedb88320b1e6b092UL, 0x6655004fa06a2517UL },
@@ -77,32 +111,34 @@ static const __vector unsigned long vfold2_reflect_const[4]
 unsigned long  __attribute__ ((aligned (32)))
 final_fold2(void *__restrict__ data) {
 
-	const __vector unsigned long vzero = {0,0};
-	const __vector unsigned long vones = {0xffffffffffffffffUL,
+	const __vector unsigned long long vzero = {0,0};
+	const __vector unsigned long long vones = {0xffffffffffffffffUL,
 											0xffffffffffffffffUL};
 
-	const __vector unsigned long vmask_64bit =
-		(__vector unsigned long)vec_sld((__vector unsigned char)vzero,
+	const __vector unsigned long long vmask_64bit =
+		(__vector unsigned long long)vec_sld((__vector unsigned char)vzero,
 			(__vector unsigned char)vones, 8);
 
-	__vector unsigned long vconst1 = vec_ld(0, vfold2_const);
-	__vector unsigned long vconst2 = vec_ld(16, vfold2_const);
-	__vector unsigned long vconst3 = vec_ld(32, vfold2_const);
+	__vector unsigned long long vconst1 = vec_ld(0, vfold2_const);
+	__vector unsigned long long vconst2 = vec_ld(16, vfold2_const);
+	__vector unsigned long long vconst3 = vec_ld(32, vfold2_const);
 
-	__vector unsigned long long vdata, v0, v1;
+	__vector unsigned long long  vdata, v0, v1;
 
 	unsigned long result = 0;
 
-	vdata = vec_ld(0, (__vector unsigned long*) data);
+	vdata = vec_ld(0, (__vector unsigned long long*) data);
+
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-	__vector unsigned long vperm_const = vec_ld(48, vfold2_const);
+	__vector unsigned long long vperm_const = vec_ld(48, vfold2_const);
 	vdata = vec_perm (vdata, vdata, (__vector unsigned char)vperm_const);
 #endif
 
-	v0 = (__vector unsigned long)__builtin_crypto_vpmsumw (
-			(__vector unsigned int)vdata, (__vector unsigned int)vconst1);
+	v0 = (__vector unsigned long long)__builtin_crypto_vpmsumw (
+			(__vector unsigned int)vdata,(__vector unsigned int)vconst1);
+
 	/* xor two 64 bit results together */
-	v1 = (__vector unsigned long)vec_sld((__vector unsigned char)v0,
+	v1 = (__vector unsigned long long)vec_sld((__vector unsigned char)v0,
 			(__vector unsigned char)v0, 8);
 	v0 = vec_xor (v1, v0);
 	v0 = vec_and (v0, vmask_64bit);
@@ -114,14 +150,15 @@ final_fold2(void *__restrict__ data) {
 	 * result back down 2x bits, we round down to the nearest multiple.
 	 */
 	/* ma */
-	v1 = __builtin_crypto_vpmsumd ((__vector unsigned long)v0,
-			(__vector unsigned long)vconst2);
+	v1 = __builtin_crypto_vpmsumd ((__vector unsigned long long)v0,
+			(__vector unsigned long long)vconst2);
 	/* q = floor(ma/(2^64)) */
-	v1 = (__vector unsigned long)vec_sld ((__vector unsigned char)vzero,
+	v1 = (__vector unsigned long long)vec_sld ((__vector unsigned char)vzero,
 			(__vector unsigned char)v1, 8);
 	/* qn */
-	v1 = __builtin_crypto_vpmsumd ((__vector unsigned long)v1,
-			(__vector unsigned long)vconst3);
+	v1 = __builtin_crypto_vpmsumd ((__vector unsigned long long)v1,
+			(__vector unsigned long long)vconst3);
+
 	 /* a - qn, subtraction is xor in GF(2) */
 	v0 = vec_xor (v1, v0);
 	/*
@@ -129,37 +166,41 @@ final_fold2(void *__restrict__ data) {
 	 * V0 [ 0 1 2 X ]
 	 * V0 [ 0 X 2 3 ]
 	 */
+#if defined (__clang__)
+	result = __builtin_unpack_vector (v0, 0);
+#else
 	result = __builtin_unpack_vector_int128 ((vector __int128_t)v0, 1);
-
+#endif
 	return result;
 }
 
 unsigned long  __attribute__ ((aligned (32)))
 final_fold2_reflected(void *__restrict__ data) {
-	const __vector unsigned long vzero = {0,0};
-	const __vector unsigned long vones = {0xffffffffffffffffUL,
+	const __vector unsigned long long vzero = {0,0};
+	const __vector unsigned long long vones = {0xffffffffffffffffUL,
 											0xffffffffffffffffUL};
-	const __vector unsigned long vmask_32bit =
-		(__vector unsigned long)vec_sld((__vector unsigned char)vzero,
+	const __vector unsigned long long vmask_32bit =
+		(__vector unsigned long long)vec_sld((__vector unsigned char)vzero,
 			(__vector unsigned char)vones, 4);
-	const __vector unsigned long vmask_64bit =
-		(__vector unsigned long)vec_sld((__vector unsigned char)vzero,
+	const __vector unsigned long long vmask_64bit =
+		(__vector unsigned long long)vec_sld((__vector unsigned char)vzero,
 			(__vector unsigned char)vones, 8);
 
-    __vector unsigned long vconst1 = vec_ld(0, vfold2_reflect_const);
-    __vector unsigned long vconst2 = vec_ld(16, vfold2_reflect_const);
-    __vector unsigned long vconst3 = vec_ld(32, vfold2_reflect_const);
+	__vector unsigned long long vconst1 = vec_ld(0, vfold2_reflect_const);
+	__vector unsigned long long vconst2 = vec_ld(16, vfold2_reflect_const);
+	__vector unsigned long long vconst3 = vec_ld(32, vfold2_reflect_const);
 
 	/* shift left one bit */
 	__vector unsigned char vsht_splat = vec_splat_u8 (1);
 
-	__vector unsigned long vdata, v0, v1;
+	__vector unsigned long long vdata, v0, v1;
 
 	unsigned long result = 0;
 
-	vdata = vec_ld(0, (__vector unsigned long*) data);
+	vdata = vec_ld(0, (__vector unsigned long long*) data);
+
 #if __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__
-	__vector unsigned long vperm_const = vec_ld(48, vfold2_reflect_const);
+	__vector unsigned long long vperm_const = vec_ld(48, vfold2_reflect_const);
 	vdata = vec_perm (vdata, vdata, (__vector unsigned char)vperm_const);
 #endif
 
@@ -169,14 +210,15 @@ final_fold2_reflected(void *__restrict__ data) {
 	 * bits on the right side (ie the lower bits) and xor'ing them
 	 * on the left side.
 	 */
-	v0 = (__vector unsigned long)__builtin_crypto_vpmsumw (
+	v0 = (__vector unsigned long long)__builtin_crypto_vpmsumw (
 			(__vector unsigned int)vdata,(__vector unsigned int)vconst1);
+
 	/* xor two 64 bit results together */
-	v1 = (__vector unsigned long)vec_sld ((__vector unsigned char)v0,
+	v1 = (__vector unsigned long long)vec_sld ((__vector unsigned char)v0,
 			(__vector unsigned char)v0, 8);
 	v0 = vec_xor (v1, v0);
 
-	v0 = (__vector unsigned long)vec_sll ((__vector unsigned char)v0,
+	v0 = (__vector unsigned long long)vec_sll ((__vector unsigned char)v0,
 			vsht_splat);
 
 	v0 = vec_and (v0, vmask_64bit);
@@ -190,13 +232,15 @@ final_fold2_reflected(void *__restrict__ data) {
 	/* bottom 32 bits of a */
 	v1 = vec_and (v0, vmask_32bit);
 	/* ma */
-	v1 = __builtin_crypto_vpmsumd ((__vector unsigned long)v1,
-			(__vector unsigned long)vconst2);
+	v1 = __builtin_crypto_vpmsumd ((__vector unsigned long long)v1,
+			(__vector unsigned long long)vconst2);
+
 	/* bottom 32 bits of ma */
 	v1 = vec_and (v1, vmask_32bit);
 	/* qn */
-	v1 = __builtin_crypto_vpmsumd ((__vector unsigned long)v1,
-			(__vector unsigned long)vconst3);
+	v1 = __builtin_crypto_vpmsumd ((__vector unsigned long long)v1,
+			(__vector unsigned long long)vconst3);
+
 	/* a - qn, subtraction is xor in GF(2) */
 	v0 = vec_xor (v0, v1);
 	/*
@@ -204,9 +248,14 @@ final_fold2_reflected(void *__restrict__ data) {
 	 * V0 [ 0 1 2 X ]
 	 * V0 [ 0 X 2 3 ]
 	 */
-	v0 = (__vector unsigned long)vec_sld ((__vector unsigned char)v0,
+	v0 = (__vector unsigned long long)vec_sld ((__vector unsigned char)v0,
 			(__vector unsigned char)vzero, 4);
+
+#if defined (__clang__)
+	result = __builtin_unpack_vector (v0, 1);
+#else
 	result = __builtin_unpack_vector_int128 ((vector __int128_t)v0, 0);
+#endif
 
 	return result;
 }

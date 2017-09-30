@@ -1,6 +1,6 @@
 ORIG_CFLAGS:= $(CFLAGS)
 
-CFLAGS+=-m64 -g -O2 -mcpu=power8 -mpower8-vector -Wall
+CFLAGS+=-m64 -g -O2 -mcpu=power8 -mcrypto -mpower8-vector -maltivec -mvsx -Wall
 ASFLAGS=-m64 -g
 LDFLAGS=-m64 -g -static
 
