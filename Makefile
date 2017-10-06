@@ -127,6 +127,7 @@ crc32_two_implementations: crc32k_wrapper.o crc32k.o vec_crc32_ethernet.o
 test: crc32_test
 	set -e ; \
 	for len in `seq 0 257`  32767 32768 32769 65535 65536 65537 ; do \
+		echo len=$$len; \
 		./crc32_test  $${RANDOM} $$len $${RANDOM} ; \
 	done ; \
 

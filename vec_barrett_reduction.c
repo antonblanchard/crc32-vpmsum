@@ -42,15 +42,46 @@ vec_ld(int __a, const __vector unsigned long long* __b)
 __vector unsigned long long  __builtin_pack_vector (unsigned long __a,
 												    unsigned long __b)
 {
-	__vector unsigned long long __v = {__a, __b};
+	__vector unsigned long long __v = {__b, __a};
 	return __v;
 }
+
+#ifndef vec_xxpermdi
 
 unsigned long __builtin_unpack_vector (__vector unsigned long long __v,
 									   int __o)
 {
 	return __v[__o];
 }
+
+#define __builtin_unpack_vector_0(a) __builtin_unpack_vector ((a), 1)
+#define __builtin_unpack_vector_1(a) __builtin_unpack_vector ((a), 0)
+
+#else
+
+/*__vector unsigned long long  __builtin_pack_vector (unsigned long __a, unsigned long __b)
+{
+    __vector unsigned long long __av = { __a }, __bv = { __b };
+    return vec_xxpermdi(__bv, __av, 0x00);
+}*/
+
+unsigned long __builtin_unpack_vector_0 (__vector unsigned long long __v)
+{
+	return vec_xxpermdi(__v, __v, 0x0)[0];
+}
+
+unsigned long __builtin_unpack_vector_1 (__vector unsigned long long __v)
+{
+	return vec_xxpermdi(__v, __v, 0x3)[0];
+}
+#endif /* vec_xxpermdi */
+
+#else /* clang */
+
+#define __builtin_pack_vector(a, b)  __builtin_pack_vector_int128 ((a), (b))
+#define __builtin_unpack_vector_0(a) __builtin_unpack_vector_int128 ((vector __int128_t)(a), 0)
+#define __builtin_unpack_vector_1(a) __builtin_unpack_vector_int128 ((vector __int128_t)(a), 1)
+
 #endif
 
 #if defined(__LITTLE_ENDIAN__)
@@ -99,12 +130,8 @@ barrett_reduction (unsigned long data){
 	unsigned long result = 0;
 
 	/* Get (unsigned long) a into vdata */
-	#if defined(__clang__)
-	__vector unsigned long long vdata =  __builtin_pack_vector(data, 0UL);
-	#else
 	__vector unsigned long long vdata = (__vector unsigned long long)
-			__builtin_pack_vector_int128(0UL, data);
-	#endif
+			__builtin_pack_vector(0UL, data);
 	/*
 	 * Now for the actual algorithm. The idea is to calculate q,
 	 * the multiple of our polynomial that we need to subtract. By
@@ -127,11 +154,7 @@ barrett_reduction (unsigned long data){
 	 * V0 [ 0 1 2 X ]
 	 * V0 [ 0 X 2 3 ]
 	 */
-	#if defined (__clang__)
-	result = __builtin_unpack_vector(v0, 0);
-	#else
-	result = __builtin_unpack_vector_int128 ((vector __int128_t)v0, 1);
-	#endif
+	result = __builtin_unpack_vector_1(v0);
 
 	return result;
 }
@@ -155,12 +178,8 @@ barrett_reduction_reflected (unsigned long data){
 	unsigned long result = 0;
 
 	/* Get (unsigned long) a into vdata */
-	#if defined(__clang__)
-	__vector unsigned long long vdata = __builtin_pack_vector(data, 0UL);
-	#else
 	__vector unsigned long long vdata = (__vector unsigned long long)
-			__builtin_pack_vector_int128(0UL, data);
-	#endif
+			__builtin_pack_vector(0UL, data);
 	/*
 	 * Now for the actual algorithm. The idea is to calculate q,
 	 * the multiple of our polynomial that we need to subtract. By
@@ -187,11 +206,7 @@ barrett_reduction_reflected (unsigned long data){
 		 */
 	v0 = (__vector unsigned long long )vec_sld((__vector unsigned char)v0,
 			(__vector unsigned char)vzero, 4);
-	#if defined (__clang__)
-	result = __builtin_unpack_vector (v0, 1);
-	#else
-	result = __builtin_unpack_vector_int128 ((vector __int128_t)v0, 0);
-	#endif
+	result = __builtin_unpack_vector_0(v0);
 
 	return result;
 }
