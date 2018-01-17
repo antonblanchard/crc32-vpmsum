@@ -126,7 +126,7 @@ crc32_two_implementations: crc32k_wrapper.o crc32k.o vec_crc32_ethernet.o
 # implementation has boundaries on datasizes 16 and 256, 32768 so ensure coverage and correctness
 test: crc32_test
 	set -e ; \
-	for len in `seq 0 257`  32767 32768 32769 65535 65536 65537 ; do \
+	for len in `seq 0 300` `seq 32750 32780` `seq 65515 65560` ; do \
 		echo len=$$len; \
 		./crc32_test  $${RANDOM} $$len $${RANDOM} ; \
 	done ; \
