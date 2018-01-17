@@ -106,38 +106,12 @@ out:
 	return crc;
 }
 
-/*
- * Those stubs fix clang incompatibilitie issues with GCC builtins.
- */
 #if defined (__clang__)
-#define __builtin_crypto_vpmsumw __builtin_crypto_vpmsumb
-#define __builtin_crypto_vpmsumd __builtin_crypto_vpmsumb
-
-__vector unsigned long long __attribute__((overloadable))
-vec_ld(int __a, const __vector unsigned long long* __b)
-{
-	return (__vector unsigned long long)__builtin_altivec_lvx(__a, __b);
-}
-
-/*
- * GCC __builtin_pack_vector_int128 returns a vector __int128_t but Clang
- * seems to not recognize this type. On GCC this builtin is translated to a
- * xxpermdi instruction that only move the registers __a, __b instead generates
- * a load. Clang doesn't have this builtin or xxpermdi intrinsics. Was recently
- * implemented https://reviews.llvm.org/rL303760.
- * */
-__vector unsigned long long  __builtin_pack_vector (unsigned long __a,
-												    unsigned long __b)
-{
-	__vector unsigned long long __v = {__a, __b};
-	return __v;
-}
-
-unsigned long __builtin_unpack_vector (__vector unsigned long long __v,
-									   int __o)
-{
-	return __v[__o];
-}
+#include "clang_workaround.h"
+#else
+#define __builtin_pack_vector(a, b)  __builtin_pack_vector_int128 ((a), (b))
+#define __builtin_unpack_vector_0(a) __builtin_unpack_vector_int128 ((vector __int128_t)(a), 0)
+#define __builtin_unpack_vector_1(a) __builtin_unpack_vector_int128 ((vector __int128_t)(a), 1)
 #endif
 
 /* When we have a load-store in a single-dispatch group and address overlap
@@ -221,17 +195,10 @@ __crc32_vpmsum(unsigned int crc, void* p, unsigned long len) {
 	unsigned long length = len & 0xFFFFFFFFFFFFFF80UL;
 
 #ifdef REFLECT
-	#if defined (__clang__)
-	vcrc = __builtin_pack_vector(crc, 0UL);
-	#else
-	vcrc = (__vector unsigned long long)__builtin_pack_vector_int128(0UL, crc);
-	#endif
+	vcrc = (__vector unsigned long long)__builtin_pack_vector(0UL, crc);
 #else
-	#if defined (__clang__)
-	vcrc = __builtin_pack_vector(0UL, crc);
-	#else
-	vcrc = (__vector unsigned long long)__builtin_pack_vector_int128(crc, 0UL);
-	#endif
+	vcrc = (__vector unsigned long long)__builtin_pack_vector(crc, 0UL);
+
 	/* Shift into top 32 bits */
 	vcrc = (__vector unsigned long long)vec_sld((__vector unsigned char)vcrc,
         (__vector unsigned char)vzero, 4);
@@ -661,11 +628,7 @@ __crc32_vpmsum(unsigned int crc, void* p, unsigned long len) {
 	 * V0 [ 0 1 2 X ]
 	 * V0 [ 0 X 2 3 ]
 	 */
-	#if (__clang__)
-	result = __builtin_unpack_vector (v0, 0);
-	#else
-	result = __builtin_unpack_vector_int128 ((__vector __int128_t)v0, 1);
-	#endif
+	result = __builtin_unpack_vector_1 (v0);
 #else
 
 	/*
@@ -702,11 +665,7 @@ __crc32_vpmsum(unsigned int crc, void* p, unsigned long len) {
 	v0 = (__vector unsigned long long)vec_sld((__vector unsigned char)v0,
         (__vector unsigned char)vzero, 4);
 
-	#if (__clang__)
-	result = __builtin_unpack_vector (v0, 1);
-	#else
-	result = __builtin_unpack_vector_int128 ((__vector __int128_t)v0, 0);
-	#endif
+	result = __builtin_unpack_vector_0 (v0);
 #endif
 
 	return result;
