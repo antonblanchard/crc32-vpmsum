@@ -19,69 +19,12 @@
 #include <stdint.h>
 #include <altivec.h>
 
-/*
- * Those stubs fix clang incompatibilitie issues with GCC builtins.
- */
 #if defined (__clang__)
-#define __builtin_crypto_vpmsumw __builtin_crypto_vpmsumb
-#define __builtin_crypto_vpmsumd __builtin_crypto_vpmsumb
-
-__vector unsigned long long __attribute__((overloadable))
-vec_ld(int __a, const __vector unsigned long long* __b)
-{
-	return (__vector unsigned long long)__builtin_altivec_lvx(__a, __b);
-}
-
-/*
- * GCC __builtin_pack_vector_int128 returns a vector __int128_t but Clang
- * seems to not recognize this type. On GCC this builtin is translated to a
- * xxpermdi instruction that only move the registers __a, __b instead generates
- * a load. Clang doesn't have this builtin or xxpermdi intrinsics. Was recently
- * implemented https://reviews.llvm.org/rL303760.
- * */
-__vector unsigned long long  __builtin_pack_vector (unsigned long __a,
-												    unsigned long __b)
-{
-	__vector unsigned long long __v = {__b, __a};
-	return __v;
-}
-
-#ifndef vec_xxpermdi
-
-unsigned long __builtin_unpack_vector (__vector unsigned long long __v,
-									   int __o)
-{
-	return __v[__o];
-}
-
-#define __builtin_unpack_vector_0(a) __builtin_unpack_vector ((a), 1)
-#define __builtin_unpack_vector_1(a) __builtin_unpack_vector ((a), 0)
-
+#include "clang_workaround.h"
 #else
-
-/*__vector unsigned long long  __builtin_pack_vector (unsigned long __a, unsigned long __b)
-{
-    __vector unsigned long long __av = { __a }, __bv = { __b };
-    return vec_xxpermdi(__bv, __av, 0x00);
-}*/
-
-unsigned long __builtin_unpack_vector_0 (__vector unsigned long long __v)
-{
-	return vec_xxpermdi(__v, __v, 0x0)[0];
-}
-
-unsigned long __builtin_unpack_vector_1 (__vector unsigned long long __v)
-{
-	return vec_xxpermdi(__v, __v, 0x3)[0];
-}
-#endif /* vec_xxpermdi */
-
-#else /* clang */
-
 #define __builtin_pack_vector(a, b)  __builtin_pack_vector_int128 ((a), (b))
 #define __builtin_unpack_vector_0(a) __builtin_unpack_vector_int128 ((vector __int128_t)(a), 0)
 #define __builtin_unpack_vector_1(a) __builtin_unpack_vector_int128 ((vector __int128_t)(a), 1)
-
 #endif
 
 #if defined(__LITTLE_ENDIAN__)
