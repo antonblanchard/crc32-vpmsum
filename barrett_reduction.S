@@ -16,7 +16,9 @@
  */
 
 #if defined (__clang__)
+#ifndef __ALTIVEC__
 #define __ALTIVEC__
+#endif
 #include "ppc-asm.h"
 #else
 #include <ppc-asm.h>
