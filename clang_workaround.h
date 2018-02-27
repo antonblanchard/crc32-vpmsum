@@ -1,5 +1,5 @@
-#ifndef CLANG_WORKAROUNDS_H
-#define CLANG_WORKAROUNDS_H
+#ifndef CLANG_WORKAROUND_H
+#define CLANG_WORKAROUND_H
 
 /*
  * These stubs fix clang incompatibilities with GCC builtins.
