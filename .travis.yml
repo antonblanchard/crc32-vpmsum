@@ -1,0 +1,45 @@
+language: c
+sudo: false
+
+os: linux
+arch: ppc64le
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - gcc-5
+      - gcc-6
+      - gcc-7
+      - gcc-8
+      - gcc-9
+      - clang-4.0
+      - clang-6.0
+      - clang-8
+
+# travis set CC after this so we can't use CC here.
+env:
+  - COMPILER=gcc-5
+  - COMPILER=gcc-6
+  - COMPILER=gcc-7
+  - COMPILER=gcc-8
+  - COMPILER=clang-4.0
+  - COMPILER=clang-6.0
+  - COMPILER=clang-8
+
+matrix:
+  include:
+      env:
+        - COMPILER=/opt/at12.0/bin/gcc
+      addons:
+        apt:
+          sources:
+            - sourceline: 'deb ftp://ftp.unicamp.br/pub/linuxpatch/toolchain/at/ubuntu xenial at12.0'
+              key_url: 'ftp://ftp.unicamp.br/pub/linuxpatch/toolchain/at/ubuntu/dists/trusty/6976a827.gpg.key'
+          packages:
+            - advance-toolchain-at12.0-devel
+
+script:
+  - export CC=$COMPILER
+  - make test
