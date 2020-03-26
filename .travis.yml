@@ -1,7 +1,8 @@
 language: c
 sudo: false
 
-os: linux-ppc64le
+os: linux
+arch: ppc64le
 
 addons:
   apt:
